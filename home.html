@@ -245,7 +245,7 @@
   }
   .source-tags-label {
     color: var(--logo-color);
-    font-size: 12.5px;
+    font-size: 14px;
     font-style: italic;
     font-family: "Tenor Sans", "Optima", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
     margin-right: 2px;
@@ -298,6 +298,27 @@
     height: 13px;
     flex-shrink: 0;
     color: #ffffff;
+  }
+
+  /* ===== 关键词行入场动画:从上方滑入 + 渐显 ===== */
+  @keyframes tagRowSlideIn {
+    from {
+      transform: translateY(-12px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+  .source-tags > * {
+    animation: tagRowSlideIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .source-tags > *:nth-child(1) { animation-delay: 0.05s; }
+  .source-tags > *:nth-child(2) { animation-delay: 0.18s; }
+  .source-tags > *:nth-child(3) { animation-delay: 0.31s; }
+  @media (prefers-reduced-motion: reduce) {
+    .source-tags > * { animation: none; }
   }
 
   /* ===== 页脚 ===== */
