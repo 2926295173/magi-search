@@ -86,14 +86,13 @@
   .entity-card {
     background: #2c2b30;
     border-radius: 4px;
-    padding: 24px 26px;
+    padding: 2px 6px;
     position: relative;
   }
   .entity-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 18px;
   }
   .entity-title {
     font-size: 22px;
@@ -104,6 +103,9 @@
   .entity-type {
     font-size: 12px;
     color: #6b7785;
+    padding-bottom: 8px;
+    margin-bottom: 18px;
+    border-bottom: 1px solid #3d3c42;
   }
   .score-circle {
     width: 40px;
@@ -122,12 +124,12 @@
   /* 段落标题 */
   .section { margin-bottom: 18px; }
   .section-head {
-    font-size: 13px;
+    font-size: 16px;
     color: #b3bdc8;
     font-weight: 500;
     margin-bottom: 12px;
-    padding-bottom: 8px;
-    border-bottom: 1px solid #3d3c42;
+    padding-bottom: 0px;
+    border-bottom: 0px solid #3d3c42;
   }
   .section-head .hint {
     color: #5a6573;
@@ -153,11 +155,13 @@
   }
   .desc-tag .quote { color: #6b7785; margin: 0 2px; }
   .desc-tag .word {
-    border-bottom: 1.5px solid #4ade80;
+    border-bottom: 2.5px solid #4ade80;
     padding-bottom: 1px;
     transition: color 0.15s;
   }
   .desc-tag:hover .word { color: #93c5fd; border-bottom-color: #4aa3ff; }
+  .desc-tag.orange .word { border-bottom-color: #fb923c; }
+  .desc-tag.red .word { border-bottom-color: #f87171; }
 
   /* 展开箭头 */
   .expand-arrow {
@@ -165,6 +169,11 @@
     color: #4a5462;
     cursor: pointer;
     padding: 6px 0 2px;
+  }
+  .expand-icon {
+    display: inline-block;
+    vertical-align: middle;
+    transition: transform 0.2s;
   }
 
   /* 属性 - 两列网格 key/value */
@@ -184,19 +193,44 @@
   .attr-key { color: #b3bdc8; font-size: 13px; }
   .attr-val {
     justify-self: end;
-    padding: 4px 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 0 14px;
+    background: #294e71;
+    color: #ffffff;
+    border: none;
+    border-bottom: 2px solid #2799d8;
     border-radius: 3px;
-    font-size: 12.5px;
-    min-width: 56px;
-    text-align: center;
+    font-size: 13.5px;
+    line-height: 1;
+    font-family: inherit;
     cursor: pointer;
-    transition: filter 0.15s, box-shadow 0.15s;
+    transition: background 0.18s, transform 0.18s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
   }
-  .attr-val:hover { filter: brightness(1.25); box-shadow: 0 0 0 1px rgba(74,163,255,0.6); }
+  .attr-val:hover { background: #325a82; transform: translateY(-1px); }
+  .attr-val.blue {
+    background: #294e71;
+    color: #ffffff;
+    border-bottom: 2px solid #2799d8;
+  }
   .attr-val.green {
-    background: rgba(74, 222, 128, 0.12);
-    color: #6ee7a7;
-    border: 1px solid rgba(74, 222, 128, 0.5);
+    background: #365837;
+    color: #ffffff;
+    border-bottom: 2px solid #41ab37;
+  }
+    .attr-val.red {
+    background: #6d3a3a;
+    color: #ffffff;
+    border-bottom: 2px solid #f54840;
+  }
+    .attr-val.orange {
+    background: #6c5130;
+    color: #ffffff;
+    border-bottom: 2px solid #e49d19;
   }
   .more-dots {
     color: #5a6573;
@@ -319,37 +353,41 @@
     <div class="entity-header">
       <div>
         <div class="entity-title">马云</div>
-        <div class="entity-type">实体</div>
       </div>
       <div class="score-circle">100</div>
     </div>
+    <div class="entity-type">实体</div>
 
     <!-- 描述 -->
     <div class="section">
-      <div class="section-head">描述</div>
+      <div class="section-head" style="border-bottom: none;">描述</div>
       <div class="desc-list">
         <span class="desc-tag" data-sources="7,9"><span class="quote">"</span><span class="word">中国首富</span><span class="quote">"</span></span>
-        <span class="desc-tag" data-sources="7"><span class="quote">"</span><span class="word">中国新首富</span><span class="quote">"</span></span>
+        <span class="desc-tag orange" data-sources="7"><span class="quote">"</span><span class="word">中国新首富</span><span class="quote">"</span></span>
         <span class="desc-tag" data-sources="5,2"><span class="quote">"</span><span class="word">乡村教师代言人</span><span class="quote">"</span></span>
-        <span class="desc-tag" data-sources="2,6,9"><span class="quote">"</span><span class="word">成功的企业家</span><span class="quote">"</span></span>
-        <span class="desc-tag" data-sources="7"><span class="quote">"</span><span class="word">亚洲首富</span><span class="quote">"</span></span>
-        <span class="desc-tag" data-sources="1,8,9,10"><span class="quote">"</span><span class="word">阿里巴巴的创始人</span><span class="quote">"</span></span>
+        <span class="desc-tag orange" data-sources="2,6,9"><span class="quote">"</span><span class="word">成功的企业家</span><span class="quote">"</span></span>
+        <span class="desc-tag red" data-sources="7"><span class="quote">"</span><span class="word">亚洲首富</span><span class="quote">"</span></span>
+        <span class="desc-tag red" data-sources="1,8,9,10"><span class="quote">"</span><span class="word">阿里巴巴的创始人</span><span class="quote">"</span></span>
       </div>
-      <div class="expand-arrow">⌄</div>
+      <div class="expand-arrow">
+        <svg class="expand-icon" width="16" height="16" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">
+          <polygon points="3,5 13,5 8,11" />
+        </svg>
+      </div>
     </div>
 
     <!-- 属性 -->
     <div class="section">
       <div class="section-head">属性<span class="hint">仅显示部分热门信息·更多请点击或直接搜索问题</span></div>
       <div class="attr-grid">
-        <div class="attr-row"><span class="attr-key">创立</span><span class="attr-val green" data-sources="1,9,10">阿里巴巴</span><span class="more-dots">⋯</span></div>
-        <div class="attr-row"><span class="attr-key">CEO</span><span class="attr-val green" data-sources="8,9">张勇</span><span class="more-dots">⋯</span></div>
-        <div class="attr-row"><span class="attr-key">创办</span><span class="attr-val green" data-sources="2">中国黄页</span><span class="more-dots">⋯</span></div>
-        <div class="attr-row"><span class="attr-key">概念</span><span class="attr-val green" data-sources="10">新零售</span><span class="more-dots">⋯</span></div>
-        <div class="attr-row"><span class="attr-key">主演</span><span class="attr-val green" data-sources="3">功守道</span><span class="more-dots">⋯</span></div>
-        <div class="attr-row"><span class="attr-key">花名</span><span class="attr-val green" data-sources="8">风清扬</span><span class="more-dots">⋯</span></div>
-        <div class="attr-row"><span class="attr-key">妻子</span><span class="attr-val green" data-sources="1">张瑛</span><span class="more-dots">⋯</span></div>
-        <div class="attr-row"><span class="attr-key">母校</span><span class="attr-val green" data-sources="5">杭州师范大学</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">创立</span><span class="attr-val orange" data-sources="1,9,10">阿里巴巴</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">CEO</span><span class="attr-val orange" data-sources="8,9">张勇</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">创办</span><span class="attr-val orange" data-sources="2">中国黄页</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">概念</span><span class="attr-val orange" data-sources="10">新零售</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">主演</span><span class="attr-val orange" data-sources="3">功守道</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">花名</span><span class="attr-val orange" data-sources="8">风清扬</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">妻子</span><span class="attr-val red" data-sources="1">张瑛</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">母校</span><span class="attr-val red" data-sources="5">杭州师范大学</span><span class="more-dots">⋯</span></div>
         <div class="attr-row"><span class="attr-key">门徒</span><span class="attr-val green" data-sources="4">孙宇晨</span><span class="more-dots">⋯</span></div>
         <div class="attr-row"><span class="attr-key">生日</span><span class="attr-val green" data-sources="1">9月10日</span><span class="more-dots">⋯</span></div>
       </div>
