@@ -149,3 +149,5 @@ body.theme-light {
 
 - UI 设计参考自 [Magi](https://magi.com/) ——  Peak Labs 出品的知识搜索引擎
 - 字体来自 [Google Fonts](https://fonts.google.com/specimen/Tenor+Sans)
+- 动画演示：https://juejin.cn/post/7611114569567109135
+- 
