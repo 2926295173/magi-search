@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Mag[i] - 自然语义搜索引擎</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: #26252a;
+    color: #d3dae3;
+    font-size: 13px;
+    line-height: 1.5;
+    min-height: 100vh;
+  }
+
+  /* ===== 顶部 Logo + 搜索栏 ===== */
+  .topbar {
+    display: grid;
+    grid-template-columns: auto 1.55fr 1fr;
+    column-gap: 32px;
+    align-items: center;
+    padding: 14px 28px;
+    background: #1c1b20;
+  }
+  .logo {
+    font-family: "Times New Roman", Georgia, serif;
+    font-size: 26px;
+    font-weight: 600;
+    color: #ffffff;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+  .logo .bracket { color: #8d99a8; font-weight: 400; }
+  .searchbox {
+    flex: 1;
+    display: flex;
+    background: #ffffff;
+    border-radius: 3px;
+    overflow: hidden;
+    height: 38px;
+  }
+  .searchbox input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 16px;
+    font-size: 15px;
+    color: #333;
+    background: #fff;
+  }
+  .submit-btn {
+    width: 38px;
+    background: #4aa3ff;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  .submit-btn:hover { background: #2f8cf0; }
+  .submit-btn svg { width: 28px; height: 28px; }
+  .submit-btn svg path {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ===== 主内容区 ===== */
+  .main {
+    display: grid;
+    grid-template-columns: auto 1.55fr 1fr;
+    column-gap: 32px;
+    padding: 8px 28px 40px;
+    position: relative;
+  }
+  .main-indent {
+    visibility: hidden;
+    pointer-events: none;
+  }
+
+  /* ===== 实体卡片 ===== */
+  .entity-card {
+    background: #2c2b30;
+    border-radius: 4px;
+    padding: 24px 26px;
+    position: relative;
+  }
+  .entity-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 18px;
+  }
+  .entity-title {
+    font-size: 22px;
+    font-weight: 500;
+    color: #ffffff;
+    margin-bottom: 3px;
+  }
+  .entity-type {
+    font-size: 12px;
+    color: #6b7785;
+  }
+  .score-circle {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2.5px solid #4ade80;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+
+  /* 段落标题 */
+  .section { margin-bottom: 18px; }
+  .section-head {
+    font-size: 13px;
+    color: #b3bdc8;
+    font-weight: 500;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid #3d3c42;
+  }
+  .section-head .hint {
+    color: #5a6573;
+    font-size: 11px;
+    font-weight: normal;
+    margin-left: 8px;
+  }
+
+  /* 描述 - 带引号下划线的绿色短语 */
+  .desc-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 12px;
+    padding: 4px 0;
+  }
+  .desc-tag {
+    color: #c9d2dd;
+    font-size: 13px;
+    position: relative;
+    padding: 2px 2px;
+    cursor: pointer;
+    transition: filter 0.15s;
+  }
+  .desc-tag .quote { color: #6b7785; margin: 0 2px; }
+  .desc-tag .word {
+    border-bottom: 1.5px solid #4ade80;
+    padding-bottom: 1px;
+    transition: color 0.15s;
+  }
+  .desc-tag:hover .word { color: #93c5fd; border-bottom-color: #4aa3ff; }
+
+  /* 展开箭头 */
+  .expand-arrow {
+    text-align: center;
+    color: #4a5462;
+    cursor: pointer;
+    padding: 6px 0 2px;
+  }
+
+  /* 属性 - 两列网格 key/value */
+  .attr-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    column-gap: 28px;
+    row-gap: 14px;
+  }
+  .attr-row {
+    display: grid;
+    grid-template-columns: 70px 1fr 18px;
+    align-items: center;
+    gap: 14px;
+    padding: 4px 0;
+  }
+  .attr-key { color: #b3bdc8; font-size: 13px; }
+  .attr-val {
+    justify-self: end;
+    padding: 4px 12px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    min-width: 56px;
+    text-align: center;
+    cursor: pointer;
+    transition: filter 0.15s, box-shadow 0.15s;
+  }
+  .attr-val:hover { filter: brightness(1.25); box-shadow: 0 0 0 1px rgba(74,163,255,0.6); }
+  .attr-val.green {
+    background: rgba(74, 222, 128, 0.12);
+    color: #6ee7a7;
+    border: 1px solid rgba(74, 222, 128, 0.5);
+  }
+  .more-dots {
+    color: #5a6573;
+    cursor: pointer;
+    text-align: center;
+    font-size: 16px;
+    letter-spacing: 1px;
+  }
+
+  /* 标签 / 近义项 - 实心圆角 */
+  .tag-list { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag {
+    padding: 4px 12px;
+    border-radius: 3px;
+    font-size: 12.5px;
+    background: rgba(74, 222, 128, 0.18);
+    color: #86efac;
+    border: 1px solid rgba(74, 222, 128, 0.35);
+    cursor: pointer;
+    transition: filter 0.15s, box-shadow 0.15s;
+  }
+  .tag:hover { filter: brightness(1.25); box-shadow: 0 0 0 1px rgba(74,163,255,0.6); }
+  .tag.orange {
+    background: rgba(251, 146, 60, 0.18);
+    color: #fdba74;
+    border-color: rgba(251, 146, 60, 0.4);
+  }
+
+  /* ===== 右侧 主要学习来源 ===== */
+  .sources {
+    padding: 4px 0 0;
+  }
+  .sources-title {
+    color: #8d99a8;
+    font-size: 13px;
+    margin-bottom: 14px;
+    padding-left: 4px;
+  }
+  .source-list { list-style: none; display: flex; flex-direction: column; gap: 8px; }
+  .source-item {
+    padding: 8px 10px;
+    border-radius: 3px;
+    border: 1px solid transparent;
+    background: #28272c;
+    transition: background 0.18s, border-color 0.18s;
+    cursor: pointer;
+  }
+  .source-item:hover { background: #2f2e34; }
+  .source-item.linked {
+    background: rgba(74, 163, 255, 0.12);
+    border-color: rgba(74, 163, 255, 0.55);
+  }
+  .source-title {
+    color: #cfd6df;
+    font-size: 13.5px;
+    margin-bottom: 4px;
+    text-decoration: none;
+    display: block;
+    line-height: 1.4;
+    transition: color 0.18s;
+  }
+  .source-item.linked .source-title { color: #93c5fd; }
+  .source-meta { color: #5a6573; font-size: 11.5px; }
+
+  /* ===== SVG 连接线 ===== */
+  .connections {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    pointer-events: none;
+    z-index: 5;
+    overflow: visible;
+  }
+  .conn-line {
+    fill: none;
+    stroke: #4aa3ff;
+    stroke-width: 1.3;
+    stroke-dasharray: 4 4;
+    opacity: 0;
+    stroke-dashoffset: 0;
+    animation: dash 24s linear infinite;
+    transition: opacity 0.2s;
+  }
+  .conn-line.show { opacity: 0.85; }
+  @keyframes dash { to { stroke-dashoffset: -400; } }
+
+  @media (max-width: 900px) {
+    .main { grid-template-columns: 1fr; }
+    .attr-grid { grid-template-columns: 1fr; }
+    .connections { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ===== 顶栏 ===== -->
+<header class="topbar">
+  <div class="logo">Mag<span class="bracket">[</span>i<span class="bracket">]</span></div>
+  <form class="searchbox" onsubmit="return false">
+    <input type="text" value="马云" autocomplete="off">
+    <button class="submit-btn" title="搜索">
+      <svg viewBox="0 0 24 24">
+        <path d="M5 15 H17" />
+        <path d="M13 11 L17 15" />
+      </svg>
+    </button>
+  </form>
+</header>
+
+<!-- ===== 主区域 ===== -->
+<main class="main">
+
+  <!-- 缩进占位（与顶栏 logo 等宽，使实体卡片与搜索框左端对齐） -->
+  <div class="main-indent" aria-hidden="true">
+    <div class="logo">Mag<span class="bracket">[</span>i<span class="bracket">]</span></div>
+  </div>
+
+  <!-- 左：实体卡片 -->
+  <section class="entity-card">
+    <div class="entity-header">
+      <div>
+        <div class="entity-title">马云</div>
+        <div class="entity-type">实体</div>
+      </div>
+      <div class="score-circle">100</div>
+    </div>
+
+    <!-- 描述 -->
+    <div class="section">
+      <div class="section-head">描述</div>
+      <div class="desc-list">
+        <span class="desc-tag" data-sources="7,9"><span class="quote">"</span><span class="word">中国首富</span><span class="quote">"</span></span>
+        <span class="desc-tag" data-sources="7"><span class="quote">"</span><span class="word">中国新首富</span><span class="quote">"</span></span>
+        <span class="desc-tag" data-sources="5,2"><span class="quote">"</span><span class="word">乡村教师代言人</span><span class="quote">"</span></span>
+        <span class="desc-tag" data-sources="2,6,9"><span class="quote">"</span><span class="word">成功的企业家</span><span class="quote">"</span></span>
+        <span class="desc-tag" data-sources="7"><span class="quote">"</span><span class="word">亚洲首富</span><span class="quote">"</span></span>
+        <span class="desc-tag" data-sources="1,8,9,10"><span class="quote">"</span><span class="word">阿里巴巴的创始人</span><span class="quote">"</span></span>
+      </div>
+      <div class="expand-arrow">⌄</div>
+    </div>
+
+    <!-- 属性 -->
+    <div class="section">
+      <div class="section-head">属性<span class="hint">仅显示部分热门信息·更多请点击或直接搜索问题</span></div>
+      <div class="attr-grid">
+        <div class="attr-row"><span class="attr-key">创立</span><span class="attr-val green" data-sources="1,9,10">阿里巴巴</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">CEO</span><span class="attr-val green" data-sources="8,9">张勇</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">创办</span><span class="attr-val green" data-sources="2">中国黄页</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">概念</span><span class="attr-val green" data-sources="10">新零售</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">主演</span><span class="attr-val green" data-sources="3">功守道</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">花名</span><span class="attr-val green" data-sources="8">风清扬</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">妻子</span><span class="attr-val green" data-sources="1">张瑛</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">母校</span><span class="attr-val green" data-sources="5">杭州师范大学</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">门徒</span><span class="attr-val green" data-sources="4">孙宇晨</span><span class="more-dots">⋯</span></div>
+        <div class="attr-row"><span class="attr-key">生日</span><span class="attr-val green" data-sources="1">9月10日</span><span class="more-dots">⋯</span></div>
+      </div>
+      <div class="expand-arrow">⌄</div>
+    </div>
+
+    <!-- 标签 -->
+    <div class="section">
+      <div class="section-head">标签<span class="hint">仅显示部分来源充分的信息·点击可显示详情</span></div>
+      <div class="tag-list">
+        <span class="tag" data-sources="1,2,6,7">企业家</span>
+        <span class="tag" data-sources="9,10">公司</span>
+      </div>
+    </div>
+
+    <!-- 近义项 -->
+    <div class="section">
+      <div class="section-head">近义项</div>
+      <div class="tag-list">
+        <span class="tag orange" data-sources="1,5">马老师</span>
+        <span class="tag orange" data-sources="1">平头哥</span>
+        <span class="tag orange" data-sources="10">阿里巴巴智能</span>
+        <span class="tag orange" data-sources="3">Jack Ma</span>
+        <span class="tag orange" data-sources="3">疯子</span>
+        <span class="tag orange" data-sources="3">Jack</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- 右：主要学习来源 -->
+  <aside class="sources">
+    <div class="sources-title">主要学习来源</div>
+    <ul class="source-list">
+      <li class="source-item" id="src-1">
+        <a class="source-title" href="#">今天，55岁马云正式退休：我最大的错误，是创立了阿里巴巴！_高考</a>
+        <div class="source-meta">www.sohu.com · 2019年9月10日</div>
+      </li>
+      <li class="source-item" id="src-2">
+        <a class="source-title" href="#">马云也是斜杠青年!过去20年至少有48种身份_中国</a>
+        <div class="source-meta">www.sohu.com · 2019年9月5日</div>
+      </li>
+      <li class="source-item" id="src-3">
+        <a class="source-title" href="#">真狂!梅威瑟嘲讽马云:挑战?我甚至不知道他是谁_网易体育</a>
+        <div class="source-meta">sports.163.com · 2019年10月30日</div>
+      </li>
+      <li class="source-item" id="src-4">
+        <a class="source-title" href="#">200亿巨债压垮了戴志康?是寒门贵子的"儒商"情怀败给了现实!_…</a>
+        <div class="source-meta">www.sohu.com · 2019年9月25日</div>
+      </li>
+      <li class="source-item" id="src-5">
+        <a class="source-title" href="#">大学生择业10年调查：体制始终是第一选择_新浪教育_新浪网</a>
+        <div class="source-meta">edu.sina.com.cn · 2014年11月30日</div>
+      </li>
+      <li class="source-item" id="src-6">
+        <a class="source-title" href="#">一代鞋王富贵鸟，创始人财富曾比肩马云，如今负债近50亿_林和平</a>
+        <div class="source-meta">www.sohu.com · 2019年8月14日</div>
+      </li>
+      <li class="source-item" id="src-7">
+        <a class="source-title" href="#">汉能创始人李河君：从中国首富到勒令停牌 – OFweek太阳能光伏网</a>
+        <div class="source-meta">solar.ofweek.com · 2015年7月20日</div>
+      </li>
+      <li class="source-item" id="src-8">
+        <a class="source-title" href="#">阿里20岁，风清扬后会有期 逍遥子持创造风_网易财经</a>
+        <div class="source-meta">money.163.com · 2019年9月14日</div>
+      </li>
+      <li class="source-item" id="src-9">
+        <a class="source-title" href="#">阿里上市8位敲钟人背后的商业逻辑-科技频道-和讯网</a>
+        <div class="source-meta">tech.hexun.com · 2014年9月30日</div>
+      </li>
+      <li class="source-item" id="src-10">
+        <a class="source-title" href="#">阿里与拼多多的"增量"之战-钛媒体官方网站</a>
+        <div class="source-meta">www.tmtpost.com · 2019年7月5日</div>
+      </li>
+    </ul>
+  </aside>
+
+  <!-- SVG 连接线层（hover 时动态绘制） -->
+  <svg class="connections" id="connections"></svg>
+</main>
+
+<script>
+  const svg = document.getElementById('connections');
+  const main = document.querySelector('.main');
+  const SVG_NS = 'http://www.w3.org/2000/svg';
+
+  function resizeSvg() {
+    const rect = main.getBoundingClientRect();
+    svg.setAttribute('width', rect.width);
+    svg.setAttribute('height', rect.height);
+  }
+
+  /** 给定起止元素，画一条平滑的虚线贝塞尔 */
+  function drawCurve(fromEl, toEl) {
+    const mr = main.getBoundingClientRect();
+    const a = fromEl.getBoundingClientRect();
+    const b = toEl.getBoundingClientRect();
+
+    const x1 = a.right - mr.left;
+    const y1 = a.top + a.height / 2 - mr.top;
+    const x2 = b.left - mr.left;
+    const y2 = b.top + b.height / 2 - mr.top;
+
+    const dx = Math.max(80, (x2 - x1) * 0.55);
+    const path = document.createElementNS(SVG_NS, 'path');
+    path.setAttribute(
+      'd',
+      `M ${x1} ${y1} C ${x1 + dx} ${y1}, ${x2 - dx} ${y2}, ${x2} ${y2}`
+    );
+    path.setAttribute('class', 'conn-line');
+    svg.appendChild(path);
+    // 下一帧加 .show 触发淡入
+    requestAnimationFrame(() => path.classList.add('show'));
+    return path;
+  }
+
+  function clearLinks() {
+    svg.innerHTML = '';
+    document.querySelectorAll('.source-item.linked').forEach(el => el.classList.remove('linked'));
+  }
+
+  function activate(el) {
+    const sourcesAttr = el.dataset.sources;
+    if (!sourcesAttr) return;
+    resizeSvg();
+    clearLinks();
+    const ids = sourcesAttr.split(',').map(s => s.trim()).filter(Boolean);
+    ids.forEach(id => {
+      const target = document.getElementById('src-' + id);
+      if (!target) return;
+      target.classList.add('linked');
+      drawCurve(el, target);
+    });
+  }
+
+  // 反向：hover 来源，高亮所有指向它的左侧词
+  function activateFromSource(srcEl) {
+    const srcId = srcEl.id.replace('src-', '');
+    const hits = document.querySelectorAll(`[data-sources]`);
+    const refs = [];
+    hits.forEach(el => {
+      const ids = el.dataset.sources.split(',').map(s => s.trim());
+      if (ids.includes(srcId)) refs.push(el);
+    });
+    if (!refs.length) return;
+    resizeSvg();
+    clearLinks();
+    srcEl.classList.add('linked');
+    refs.forEach(ref => drawCurve(ref, srcEl));
+  }
+
+  // 绑定事件
+  document.querySelectorAll('[data-sources]').forEach(el => {
+    el.addEventListener('mouseenter', () => activate(el));
+    el.addEventListener('mouseleave', clearLinks);
+  });
+  document.querySelectorAll('.source-item').forEach(el => {
+    el.addEventListener('mouseenter', () => activateFromSource(el));
+    el.addEventListener('mouseleave', clearLinks);
+  });
+
+  window.addEventListener('resize', () => {
+    clearLinks();
+    resizeSvg();
+  });
+  window.addEventListener('load', resizeSvg);
+</script>
+
+</body>
+</html>

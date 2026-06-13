@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Mag[i] - 自然语义搜索引擎</title>
+<!-- Tenor Sans: 古典 Roman 比例无衬线,M 顶部内收,与 Magi 原 Logo 一致;走 Google 中国镜像 -->
+<link rel="preconnect" href="https://fonts.googleapis.cn">
+<link href="https://fonts.googleapis.cn/css2?family=Tenor+Sans&display=swap" rel="stylesheet">
+<style>
+  /* ===== 主题变量(暗色默认) ===== */
+  :root {
+    --bg: linear-gradient(180deg, #1a1a1e 0%, #39383d 100%);
+    --text: #d3dae3;
+    --logo-color: #ffffff;
+    --bracket-color: #6b7785;
+    --search-bg: #ffffff;
+    --search-text: #333;
+    --search-placeholder: #b8bfc7;
+    --search-shadow: 0 1px 4px rgba(0,0,0,0.3);
+    --btn-blue: #4aa3ff;
+    --btn-blue-hover: #2f8cf0;
+    --muted: #8d99a8;
+    --muted-strong: #c9d2dd;
+    --subtle: #5a6573;
+    --following-bracket: #3d4754;
+    --news-bg: #3a393e;
+    --news-bg-hover: #4a494e;
+    --news-border: transparent;
+    --news-title: #7ba8d9;
+    --news-title-hover: #9ec1e8;
+    --source-tag-bg: #3a7fb8;
+    --source-tag-bg-hover: #4a90c9;
+    --source-tag-text: #ffffff;
+    --footer-mark: #2d3744;
+    --footer-mark-bracket: #232d39;
+    --pill-border: #3d4754;
+    --pill-text: #8d99a8;
+    --pill-hover-bg: rgba(74, 163, 255, 0.08);
+    --pill-active-bg: rgba(74, 163, 255, 0.15);
+    /* iOS 风格主题开关 */
+    --switch-track: #555555;
+    --switch-border: #3d4754;
+    --switch-knob: #d3dae3;
+    --switch-knob-shadow: 0 1px 3px rgba(0,0,0,0.4);
+  }
+  /* ===== 主题变量(亮色覆盖) ===== */
+  body.theme-light {
+    --bg: #f4f6f8;
+    --text: #2a3340;
+    --logo-color: #1c2530;
+    --bracket-color: #8d99a8;
+    --search-bg: #ffffff;
+    --search-text: #333;
+    --search-placeholder: #b8bfc7;
+    --search-shadow: 0 1px 6px rgba(28, 37, 48, 0.10);
+    --btn-blue: #4aa3ff;
+    --btn-blue-hover: #2f8cf0;
+    --muted: #6b7785;
+    --muted-strong: #2a3340;
+    --subtle: #8d99a8;
+    --following-bracket: #c5cbd3;
+    --news-bg: rgba(0, 0, 0, 0.035);
+    --news-bg-hover: rgba(0, 0, 0, 0.06);
+    --news-border: transparent;
+    --news-title: #3a7eb8;
+    --news-title-hover: #2c6aa0;
+    --source-tag-bg: #3a7fb8;
+    --source-tag-bg-hover: #2c6aa0;
+    --source-tag-text: #ffffff;
+    --footer-mark: #d8dde3;
+    --footer-mark-bracket: #e6e9ee;
+    --pill-border: #c5cbd3;
+    --pill-text: #6b7785;
+    --pill-hover-bg: rgba(74, 163, 255, 0.10);
+    --pill-active-bg: rgba(74, 163, 255, 0.18);
+    /* iOS 风格主题开关 — 亮色模式:绿色"开启"状态(贴近 iOS 原生) */
+    --switch-track: #4aa3ff;
+    --switch-border: #4aa3ff;
+    --switch-knob: #ffffff;
+    --switch-knob-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; }
+  body {
+    font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    background-attachment: fixed;
+    color: var(--text);
+    font-size: 13px;
+    line-height: 1.5;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    transition: color 0.25s ease;
+  }
+
+  /* ===== 整体居中容器 ===== */
+  .page {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 40px 20px;
+  }
+
+  /* ===== Logo ===== */
+  .logo {
+    font-family: "Tenor Sans", "Optima", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 76px;
+    font-weight: 400;
+    color: var(--logo-color);
+    letter-spacing: 1px;
+    margin-bottom: 32px;
+    user-select: none;
+    transition: color 0.25s ease;
+  }
+  .logo .bracket {
+    color: inherit;
+    font-weight: 400;
+    margin: 0 -2px;
+    transition: color 0.25s ease;
+  }
+
+  /* ===== 搜索栏 ===== */
+  .searchbox {
+    width: 100%;
+    max-width: 560px;
+    display: flex;
+    background: var(--search-bg);
+    border-radius: 3px;
+    overflow: hidden;
+    height: 40px;
+    box-shadow: var(--search-shadow);
+    transition: box-shadow 0.25s ease;
+  }
+  .searchbox input {
+    flex: 1;
+    border: none;
+    outline: none;
+    padding: 0 16px;
+    font-size: 17px;
+    color: var(--search-text);
+    background: var(--search-bg);
+  }
+  .searchbox input::placeholder { color: var(--search-placeholder); }
+  .submit-btn {
+    width: 40px;
+    flex-shrink: 0;
+    background: var(--btn-blue);
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+  }
+  .submit-btn:hover { background: var(--btn-blue-hover); }
+  .submit-btn svg { width: 28px; height: 28px; }
+  .submit-btn svg path {
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.4;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* ===== 欢迎链接 ===== */
+  .welcome {
+    width: 100%;
+    max-width: 560px;
+    margin-top: 40px;
+    color: var(--news-title);
+    font-size: 14.5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: color 0.25s ease;
+  }
+  .welcome a {
+    color: var(--news-title);
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .welcome a:hover { color: var(--news-title-hover); }
+
+  /* ===== Magi 正在关注 ===== */
+  .following {
+    width: 100%;
+    max-width: 560px;
+    margin-top: 28px;
+  }
+  .following-title {
+    color: var(--subtle);
+    font-size: 15.5px;
+    margin-bottom: 8px;
+    padding-left: 4px;
+    font-family: "Tenor Sans", "Optima", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-weight: 400;
+    font-style: italic;
+    transition: color 0.25s ease;
+  }
+  .following-title .bracket { color: var(--following-bracket); transition: color 0.25s ease; }
+  .news-item {
+    padding: 10px 14px;
+    background: var(--news-bg);
+    border-left: 2px solid var(--news-border);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+  .news-item:hover { background: var(--news-bg-hover); }
+  .news-title {
+    color: var(--news-title);
+    font-size: 15px;
+    line-height: 1.5;
+    text-decoration: none;
+    display: block;
+    margin-bottom: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.18s;
+  }
+  .news-item:hover .news-title { color: var(--news-title-hover); }
+  .news-url {
+    color: #8d99a8;
+    font-size: 12.5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    transition: color 0.25s ease;
+  }
+
+  /* "从该来源学习到..." + 关键词胶囊标签 */
+  .source-tags {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 12px;
+    padding-left: 6px;
+  }
+  .source-tags-label {
+    color: var(--logo-color);
+    font-size: 12.5px;
+    font-style: italic;
+    font-family: "Tenor Sans", "Optima", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    margin-right: 2px;
+    transition: color 0.25s ease;
+  }
+  .source-tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 5px 12px;
+    border: none;
+    background: var(--source-tag-bg);
+    color: var(--source-tag-text);
+    border-radius: 3px;
+    font-size: 12.5px;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.18s;
+  }
+  .source-tag:hover { background: var(--source-tag-bg-hover); }
+  .source-tag svg {
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+  }
+
+  /* ===== 关键词小卡片(免费游戏) ===== */
+  .source-tag-card {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-height: 32px;
+    padding: 0 14px;
+    background: #294e71;
+    color: #ffffff;
+    border: none;
+    border-bottom: 2px solid #2799d8;
+    border-radius: 3px;
+    font-size: 13.5px;
+    line-height: 1;
+    font-family: inherit;
+    cursor: pointer;
+    transition: background 0.18s, transform 0.18s;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  }
+  .source-tag-card:hover { background: #325a82; transform: translateY(-1px); }
+  .source-tag-card svg {
+    width: 13px;
+    height: 13px;
+    flex-shrink: 0;
+    color: #ffffff;
+  }
+
+  /* ===== 页脚 ===== */
+  .footer {
+    padding: 16px 28px 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ffffff;
+    font-size: 12px;
+    position: relative;
+    transition: color 0.25s ease;
+  }
+  .footer-links {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .footer-links a {
+    color: #ffffff;
+    text-decoration: none;
+    transition: color 0.15s;
+  }
+  .footer-links a:hover { color: rgba(255, 255, 255, 0.7); }
+  .footer-mark {
+    position: absolute;
+    right: 28px;
+    bottom: 14px;
+    font-family: "Tenor Sans", "Optima", "Avenir Next", "Avenir", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--footer-mark);
+    letter-spacing: 1px;
+    user-select: none;
+    transition: color 0.25s ease;
+  }
+  .footer-mark .bracket { color: var(--footer-mark-bracket); transition: color 0.25s ease; }
+
+  @media (max-width: 600px) {
+    .logo { font-size: 56px; }
+    .footer-mark { display: none; }
+  }
+
+  /* ===== 右上角主题切换(iOS 风格滑动开关) ===== */
+  .top-actions {
+    position: fixed;
+    top: 18px;
+    right: 22px;
+    z-index: 10;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+  }
+  .theme-switch {
+    width: 50px;
+    height: 28px;
+    padding: 0;
+    border-radius: 999px;
+    background: var(--switch-track);
+    border: 1px solid var(--switch-border);
+    cursor: pointer;
+    position: relative;
+    transition: background 0.28s ease, border-color 0.28s ease;
+    font-family: inherit;
+    -webkit-tap-highlight-color: transparent;
+  }
+  /* 滑块(小球) */
+  .theme-switch::before {
+    content: "";
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: var(--switch-knob);
+    box-shadow: var(--switch-knob-shadow);
+    /* iOS 弹性曲线 */
+    transition: transform 0.32s cubic-bezier(0.34, 1.4, 0.64, 1),
+                background 0.25s ease,
+                box-shadow 0.25s ease;
+  }
+  /* 亮色主题:小球向右滑 */
+  body.theme-light .theme-switch::before {
+    transform: translateX(22px);
+  }
+  /* 按下时小球轻微拉长 — 仿 iOS 的"按住伸展"效果 */
+  .theme-switch:active::before {
+    width: 26px;
+  }
+  body.theme-light .theme-switch:active::before {
+    transform: translateX(18px);
+    width: 26px;
+  }
+  .theme-switch:focus-visible {
+    outline: 2px solid var(--btn-blue);
+    outline-offset: 2px;
+  }
+</style>
+</head>
+<body>
+
+<!-- 右上角:iOS 风格主题滑动开关 -->
+<div class="top-actions">
+  <button class="theme-switch" type="button" id="theme-toggle"
+          role="switch" aria-checked="false" aria-label="切换主题"
+          title="切换明暗主题"></button>
+</div>
+
+<div class="page">
+  <!-- Logo -->
+  <div class="logo">Mag<span class="bracket">[</span>i<span class="bracket">]</span></div>
+
+  <!-- 搜索栏 -->
+  <form class="searchbox" id="search-form" onsubmit="return handleSearch(event)">
+    <input
+      type="text"
+      id="search-input"
+      placeholder="问题 / 关键词 / 表达式"
+      autocomplete="off"
+      autofocus
+    >
+    <button class="submit-btn" title="搜索" type="submit">
+      <svg viewBox="0 0 24 24">
+        <path d="M5 15 H17" />
+        <path d="M13 11 L17 15" />
+      </svg>
+    </button>
+  </form>
+
+  <!-- 欢迎链接 -->
+  <div class="welcome">
+    <span>🎉</span><span>欢迎使用 Magi，<a href="#" id="learn-more">点击了解更多</a></span>
+  </div>
+
+  <!-- Magi 正在学习 -->
+  <div class="following">
+    <div class="following-title">Mag<span class="bracket">[</span>i<span class="bracket">]</span> 正在学习...</div>
+    <div class="news-item" onclick="openNews()">
+      <a class="news-title" href="https://news.newseed.cn/p/1344383" target="_blank">
+        《旅行青蛙》离场，二十多年前的情怀电子鸡你还养不养？_新闻_新芽NewSeed
+      </a>
+      <div class="news-url">https://news.newseed.cn/p/1344383</div>
+    </div>
+    <!-- 从该来源学习到的关键词 -->
+    <div class="source-tags">
+      <span class="source-tags-label">从该来源学习到...</span>
+      <button class="source-tag-card" type="button" onclick="searchTag('iOS')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M21 21 L16.65 16.65"/>
+        </svg>
+        iOS
+      </button>
+      <button class="source-tag-card" type="button" onclick="searchTag('免费游戏')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="7"/>
+          <path d="M21 21 L16.65 16.65"/>
+        </svg>
+        免费游戏
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 页脚 -->
+<footer class="footer">
+  <div class="footer-links">
+    <span>© Peak Labs</span>
+    <a href="#">服务条款</a>
+    <a href="#">京ICP证 150824号</a>
+  </div>
+  <div class="footer-mark">mag<span class="bracket">[</span>i<span class="bracket">]</span></div>
+</footer>
+
+<script>
+  // ===== 主题切换 =====
+  const themeBtn = document.getElementById('theme-toggle');
+  const THEME_KEY = 'magi-theme';
+
+  function applyTheme(theme) {
+    const isLight = theme === 'light';
+    document.body.classList.toggle('theme-light', isLight);
+    // 同步 aria-checked,无障碍读屏正确朗读"开/关"
+    themeBtn.setAttribute('aria-checked', isLight ? 'true' : 'false');
+  }
+
+  // 启动时读取保存的主题(无则用系统偏好,系统也没明确则暗色)
+  (function initTheme() {
+    let saved = localStorage.getItem(THEME_KEY);
+    if (!saved) {
+      saved = (window.matchMedia &&
+               window.matchMedia('(prefers-color-scheme: light)').matches)
+        ? 'light' : 'dark';
+    }
+    applyTheme(saved);
+  })();
+
+  themeBtn.addEventListener('click', function () {
+    const next = document.body.classList.contains('theme-light') ? 'dark' : 'light';
+    applyTheme(next);
+    try { localStorage.setItem(THEME_KEY, next); } catch (_) { /* 隐私模式忽略 */ }
+  });
+
+  // ===== 搜索提交:跳转到 magi.html 并带上查询参数 =====
+  function handleSearch(event) {
+    event.preventDefault();
+    const input = document.getElementById('search-input');
+    const q = input.value.trim();
+    if (!q) { input.focus(); return false; }
+    window.location.href = 'magi.html?q=' + encodeURIComponent(q);
+    return false;
+  }
+
+  // 点击新闻条目跳转
+  function openNews() {
+    window.open('https://news.newseed.cn/p/1344383', '_blank');
+  }
+
+  // 点击关键词胶囊 -> 用该词搜索
+  function searchTag(tag) {
+    window.location.href = 'magi.html?q=' + encodeURIComponent(tag);
+  }
+
+  // "点击了解更多"
+  document.getElementById('learn-more').addEventListener('click', function(e) {
+    e.preventDefault();
+    alert('Mag[i] 是一个基于机器学习的自然语义搜索引擎，可以从互联网上自动学习并整理知识。');
+  });
+
+  // 全局按 / 唤起搜索焦点(类似 Magi 真实站点)
+  document.addEventListener('keydown', function(e) {
+    if (e.key === '/' && document.activeElement.tagName !== 'INPUT') {
+      e.preventDefault();
+      document.getElementById('search-input').focus();
+    }
+  });
+</script>
+
+</body>
+</html>
